@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -6,26 +6,54 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+let mainWindow = null;
+
 const createWindow = () => {
-  const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    frame: false, // Quita la barra de título
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
     },
+    titleBarStyle: "hidden",
+    titleBarOverlay: false,
   });
 
   // Cargar aplicación React en desarrollo
   if (process.env.NODE_ENV === "development") {
-    win.loadURL("http://localhost:5173");
-    win.webContents.openDevTools();
+    mainWindow.loadURL("http://localhost:5173");
+    mainWindow.webContents.openDevTools();
   } else {
-    win.loadFile(path.join(__dirname, "../dist/index.html"));
+    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
 };
+
+// Manejar eventos de control de ventana
+ipcMain.on("window-minimize", () => {
+  if (mainWindow) {
+    mainWindow.minimize();
+  }
+});
+
+ipcMain.on("window-maximize", () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.on("window-close", () => {
+  if (mainWindow) {
+    mainWindow.close();
+  }
+});
 
 app.whenReady().then(() => {
   createWindow();

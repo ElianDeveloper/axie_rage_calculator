@@ -154,7 +154,7 @@ export function DamageCalculator() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="h-full bg-gray-900 text-white p-6 overflow-auto">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-8 text-yellow-400">
           Calculadora de Daño - Axie Infinity Origin
