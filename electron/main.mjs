@@ -14,6 +14,7 @@ const createWindow = () => {
     height: 600,
     frame: false, // Quita la barra de título
     autoHideMenuBar: true,
+    alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
