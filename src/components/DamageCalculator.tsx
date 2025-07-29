@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Team, DamageConfig } from "../types/axie";
 import { TEAM_CARDS } from "../data/cards";
-import { RUNES } from "../data/runes";
 import { calculateCardDamage } from "../utils/damageCalculator";
 import { useElectronStore } from "../hooks/useElectronStore";
 
@@ -50,6 +49,10 @@ export function DamageCalculator() {
     },
   });
 
+  const [selectedAxie, setSelectedAxie] = useState<"front" | "mid" | "back">(
+    "front"
+  );
+
   const [damageConfig, setDamageConfig] = useState<DamageConfig>({
     damageReduction: 0,
     targetHasAlert: false,
@@ -58,398 +61,240 @@ export function DamageCalculator() {
   // Cargar configuración guardada y mostrar log
   useEffect(() => {
     if (savedTeam) {
-      console.log("=== CONFIGURACIÓN GUARDADA CARGADA ===");
-      console.log("Equipo completo:", savedTeam);
-
-      // Log detallado de cada axie
-      Object.entries(savedTeam).forEach(([position, axie]) => {
-        console.log(`\n--- ${position.toUpperCase()} ---`);
-        console.log("Runa:", axie.rune?.name || "Sin runa");
-        console.log("Cartas:");
-        Object.entries(axie.cards).forEach(([cardType, card]) => {
-          const typedCard = card as {
-            name: string;
-            isEvolved: boolean;
-            amuletBonus: number;
-          };
-          console.log(
-            `  ${cardType}: ${typedCard.name} - Evolucionada: ${typedCard.isEvolved} - Amuleto: +${typedCard.amuletBonus}`
-          );
-        });
-      });
-
-      console.log("=== FIN CONFIGURACIÓN ===");
-
       // Cargar la configuración en el estado local
       setTeam(savedTeam);
-    } else {
-      console.log("No hay configuración guardada disponible");
     }
   }, [savedTeam]);
 
-  const [selectedAxie, setSelectedAxie] = useState<"front" | "mid" | "back">(
-    "front"
-  );
-  const [selectedCard, setSelectedCard] = useState<
-    "ears" | "horn" | "back" | "tail"
-  >("ears");
-
   const currentAxie = team[selectedAxie];
 
-  const handleRageStacksChange = (
-    position: "front" | "mid" | "back",
-    value: number
-  ) => {
+  const handleRageStacksChange = (value: number) => {
     setTeam((prev) => ({
       ...prev,
-      [position]: {
-        ...prev[position],
+      [selectedAxie]: {
+        ...prev[selectedAxie],
         furyState: {
-          ...prev[position].furyState,
-          rageStacks: Math.max(0, Math.min(20, value)),
+          ...prev[selectedAxie].furyState,
+          rageStacks: Math.max(0, Math.min(10, value)),
           isInFury: value >= 10,
         },
       },
     }));
   };
 
-  const handleEnergySpentChange = (
-    position: "front" | "mid" | "back",
-    value: number
-  ) => {
+  const handleEnergySpentChange = (value: number) => {
     setTeam((prev) => ({
       ...prev,
-      [position]: {
-        ...prev[position],
-        energySpent: Math.max(0, value),
+      [selectedAxie]: {
+        ...prev[selectedAxie],
+        energySpent: Math.max(0, Math.min(10, value)),
       },
     }));
   };
 
-  const handleAmuletChange = (
-    position: "front" | "mid" | "back",
-    cardType: "ears" | "horn" | "back" | "tail",
-    value: number
-  ) => {
-    setTeam((prev) => ({
-      ...prev,
-      [position]: {
-        ...prev[position],
-        cards: {
-          ...prev[position].cards,
-          [cardType]: {
-            ...prev[position].cards[cardType],
-            amuletBonus: Math.max(0, value),
-          },
-        },
-      },
-    }));
+  const getAxieDisplayName = (position: string) => {
+    const names = {
+      front: "Front",
+      mid: "Mid",
+      back: "Back",
+    };
+    return names[position as keyof typeof names];
   };
-
-  const handleCardEvolution = (
-    position: "front" | "mid" | "back",
-    cardType: "ears" | "horn" | "back" | "tail"
-  ) => {
-    setTeam((prev) => ({
-      ...prev,
-      [position]: {
-        ...prev[position],
-        cards: {
-          ...prev[position].cards,
-          [cardType]: {
-            ...prev[position].cards[cardType],
-            isEvolved: !prev[position].cards[cardType].isEvolved,
-          },
-        },
-      },
-    }));
-  };
-
-  const handleRuneChange = (
-    position: "front" | "mid" | "back",
-    runeKey: string,
-    level: number
-  ) => {
-    const rune = RUNES[runeKey as keyof typeof RUNES]?.find(
-      (r) => r.level === level
-    );
-    setTeam((prev) => ({
-      ...prev,
-      [position]: {
-        ...prev[position],
-        rune: rune || undefined,
-      },
-    }));
-  };
-
-  const damageCalculation = calculateCardDamage(
-    currentAxie,
-    selectedCard,
-    damageConfig
-  );
 
   return (
     <div className="h-full bg-gray-900 text-white p-6 overflow-auto">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8 text-yellow-400">
-          Calculadora de Daño - Axie Infinity Origin
-        </h1>
+      <div className="max-w-6xl mx-auto">
+        {/* Selector de axie */}
+        <div className="flex justify-center mb-8">
+          <div className="flex space-x-4">
+            {(["front", "mid", "back"] as const).map((pos) => (
+              <button
+                key={pos}
+                onClick={() => setSelectedAxie(pos)}
+                className={`px-8 py-4 rounded-lg text-lg font-bold transition-all ${
+                  selectedAxie === pos
+                    ? "bg-blue-600 text-white shadow-lg"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                {getAxieDisplayName(pos)}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Panel de configuración del equipo */}
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4 text-blue-400">
-              Configuración del Equipo
+        {/* Información del axie seleccionado */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-blue-400">
+              {getAxieDisplayName(selectedAxie)}
             </h2>
-
-            {/* Selector de axie */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">
-                Seleccionar Axie:
-              </label>
-              <div className="flex space-x-2">
-                {(["front", "mid", "back"] as const).map((pos) => (
-                  <button
-                    key={pos}
-                    onClick={() => setSelectedAxie(pos)}
-                    className={`px-4 py-2 rounded ${
-                      selectedAxie === pos
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    }`}
-                  >
-                    {pos === "front" ? "Front" : pos === "mid" ? "Mid" : "Back"}
-                  </button>
-                ))}
+            {currentAxie.rune && (
+              <div className="bg-purple-600 px-4 py-2 rounded-full text-sm font-medium">
+                {currentAxie.rune.name}
               </div>
-            </div>
+            )}
+          </div>
 
-            {/* Configuración del axie seleccionado */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
+          {/* Control de Rage y Reducción de Daño */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-lg font-medium">
                   Rage Stacks: {currentAxie.furyState.rageStacks}
                 </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="20"
-                  value={currentAxie.furyState.rageStacks}
-                  onChange={(e) =>
-                    handleRageStacksChange(
-                      selectedAxie,
-                      parseInt(e.target.value)
-                    )
-                  }
-                  className="w-full"
-                />
                 {currentAxie.furyState.isInFury && (
-                  <span className="text-red-400 text-sm">¡EN FURIA!</span>
+                  <span className="text-red-400 text-lg font-bold animate-pulse">
+                    ¡EN FURIA!
+                  </span>
                 )}
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Energía Gastada: {currentAxie.energySpent}
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={currentAxie.energySpent}
-                  onChange={(e) =>
-                    handleEnergySpentChange(
-                      selectedAxie,
-                      parseInt(e.target.value) || 0
-                    )
-                  }
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
-                />
-              </div>
-
-              {/* Configuración de runa */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Runa:</label>
-                <select
-                  value={currentAxie.rune?.id || ""}
-                  onChange={(e) => {
-                    const [runeKey, level] = e.target.value.split("-");
-                    if (runeKey && level) {
-                      handleRuneChange(selectedAxie, runeKey, parseInt(level));
-                    }
-                  }}
-                  className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
-                >
-                  <option value="">Sin runa</option>
-                  {Object.entries(RUNES).map(([runeKey, runeLevels]) => (
-                    <optgroup
-                      key={runeKey}
-                      label={runeKey.replace(/([A-Z])/g, " $1").trim()}
-                    >
-                      {runeLevels.map((rune) => (
-                        <option
-                          key={rune.id}
-                          value={`${runeKey}-${rune.level}`}
-                        >
-                          {rune.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                value={currentAxie.furyState.rageStacks}
+                onChange={(e) =>
+                  handleRageStacksChange(parseInt(e.target.value))
+                }
+                className="w-full h-3 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-sm text-gray-400 mt-1">
+                <span>0</span>
+                <span>5</span>
+                <span>10 (Furia)</span>
               </div>
             </div>
-          </div>
 
-          {/* Panel de configuración de cartas */}
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4 text-green-400">
-              Configuración de Cartas
-            </h2>
-
-            {/* Selector de carta */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">
-                Seleccionar Carta:
+            <div>
+              <label className="text-lg font-medium mb-2 block">
+                Reducción de Daño: {damageConfig.damageReduction}%
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {(["ears", "horn", "back", "tail"] as const).map((cardType) => (
-                  <button
-                    key={cardType}
-                    onClick={() => setSelectedCard(cardType)}
-                    className={`px-3 py-2 rounded text-sm ${
-                      selectedCard === cardType
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    }`}
-                  >
-                    {currentAxie.cards[cardType].name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Configuración de la carta seleccionada */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  {currentAxie.cards[selectedCard].name}
-                </label>
-                <div className="text-sm text-gray-300 mb-2">
-                  Daño:{" "}
-                  {currentAxie.cards[selectedCard].isEvolved
-                    ? currentAxie.cards[selectedCard].evolvedAttack
-                    : currentAxie.cards[selectedCard].baseAttack}
-                </div>
-                <div className="text-xs text-gray-400 mb-3">
-                  {currentAxie.cards[selectedCard].effect}
-                </div>
-
-                <div className="flex items-center space-x-2 mb-3">
-                  <input
-                    type="checkbox"
-                    id="evolved"
-                    checked={currentAxie.cards[selectedCard].isEvolved}
-                    onChange={() =>
-                      handleCardEvolution(selectedAxie, selectedCard)
-                    }
-                    className="rounded"
-                  />
-                  <label htmlFor="evolved" className="text-sm">
-                    Evolucionada (Lv2)
-                  </label>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Bonus de Amuleto:{" "}
-                    {currentAxie.cards[selectedCard].amuletBonus}
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="50"
-                    value={currentAxie.cards[selectedCard].amuletBonus}
-                    onChange={(e) =>
-                      handleAmuletChange(
-                        selectedAxie,
-                        selectedCard,
-                        parseInt(e.target.value) || 0
-                      )
-                    }
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
-                  />
-                </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={damageConfig.damageReduction}
+                onChange={(e) =>
+                  setDamageConfig((prev) => ({
+                    ...prev,
+                    damageReduction: parseInt(e.target.value),
+                  }))
+                }
+                className="w-full h-3 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-sm text-gray-400 mt-1">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Panel de resultados */}
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4 text-purple-400">
-              Resultado del Daño
-            </h2>
+        {/* Cartas del axie */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {(["ears", "horn", "back", "tail"] as const).map((cardType) => {
+            const card = currentAxie.cards[cardType];
+            const damageCalculation = calculateCardDamage(
+              currentAxie,
+              cardType,
+              damageConfig
+            );
 
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-6xl font-bold text-yellow-400 mb-2">
-                  {damageCalculation.finalDamage}
+            return (
+              <div
+                key={cardType}
+                className="bg-gray-800 rounded-lg p-6 relative"
+              >
+                {/* Control de energía para RONIN */}
+                {cardType === "back" && (
+                  <div className="absolute top-3 right-3 flex items-center space-x-2 bg-gray-700 px-2 py-1 rounded">
+                    <button
+                      onClick={() =>
+                        handleEnergySpentChange(
+                          Math.max(0, currentAxie.energySpent - 1)
+                        )
+                      }
+                      className="w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold hover:bg-red-700"
+                    >
+                      -
+                    </button>
+                    <span className="text-sm font-medium text-white min-w-[20px] text-center">
+                      {currentAxie.energySpent}
+                    </span>
+                    <button
+                      onClick={() =>
+                        handleEnergySpentChange(
+                          Math.min(10, currentAxie.energySpent + 1)
+                        )
+                      }
+                      className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold hover:bg-green-700"
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
+
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-bold text-green-400 mb-2">
+                    {card.name}
+                  </h3>
+                  <div className="text-sm text-gray-400">
+                    Daño base:{" "}
+                    {card.isEvolved ? card.evolvedAttack : card.baseAttack}
+                  </div>
+                  {card.amuletBonus > 0 && (
+                    <div className="text-sm text-yellow-400">
+                      +{card.amuletBonus} amuleto
+                    </div>
+                  )}
                 </div>
-                <div className="text-sm text-gray-400">Daño Final</div>
-              </div>
 
-              <div className="bg-gray-700 p-4 rounded">
-                <h3 className="font-bold mb-2 text-purple-300">
-                  Desglose del Daño:
-                </h3>
-                <div className="space-y-1 text-sm">
+                {/* Estado de evolución */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-center">
+                    <div
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        card.isEvolved
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-600 text-gray-300"
+                      }`}
+                    >
+                      {card.isEvolved ? "Evolucionada" : "Nivel 1"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Efecto de la carta */}
+                <div className="mb-4">
+                  <div className="text-xs text-gray-300 bg-gray-700 p-3 rounded">
+                    {card.effect}
+                  </div>
+                </div>
+
+                {/* Daño calculado */}
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-yellow-400 mb-2">
+                    {damageCalculation.finalDamage}
+                  </div>
+                  <div className="text-sm text-gray-400">Daño Final</div>
+                </div>
+
+                {/* Desglose del daño */}
+                <div className="mt-4 bg-gray-700 p-3 rounded text-xs">
+                  <div className="font-medium text-purple-300 mb-2">
+                    Desglose:
+                  </div>
                   {damageCalculation.breakdown.map((item, index) => (
-                    <div key={index} className="text-gray-300">
+                    <div key={index} className="text-gray-300 mb-1">
                       {item}
                     </div>
                   ))}
                 </div>
               </div>
-
-              {/* Configuración de reducción de daño */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Reducción de Daño: {damageConfig.damageReduction}%
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={damageConfig.damageReduction}
-                  onChange={(e) =>
-                    setDamageConfig((prev) => ({
-                      ...prev,
-                      damageReduction: parseInt(e.target.value),
-                    }))
-                  }
-                  className="w-full"
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="alert"
-                  checked={damageConfig.targetHasAlert}
-                  onChange={(e) =>
-                    setDamageConfig((prev) => ({
-                      ...prev,
-                      targetHasAlert: e.target.checked,
-                    }))
-                  }
-                  className="rounded"
-                />
-                <label htmlFor="alert" className="text-sm">
-                  Objetivo tiene Alert
-                </label>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>
