@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Header } from "./components/Header";
 import { DamageCalculator } from "./components/DamageCalculator";
+import { TeamConfigurator } from "./components/TeamConfigurator";
 
 function App() {
   const [currentView, setCurrentView] = useState<"equipo" | "juego">("equipo");
@@ -10,18 +11,7 @@ function App() {
       <Header currentView={currentView} onViewChange={setCurrentView} />
 
       <div className="flex-1 overflow-hidden">
-        {currentView === "juego" ? (
-          <DamageCalculator />
-        ) : (
-          <div className="h-full flex items-center justify-center text-white">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-4">Vista de Juego</h2>
-              <p className="text-gray-400">
-                Esta vista estará disponible próximamente
-              </p>
-            </div>
-          </div>
-        )}
+        {currentView === "equipo" ? <TeamConfigurator /> : <DamageCalculator />}
       </div>
     </div>
   );

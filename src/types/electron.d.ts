@@ -4,6 +4,16 @@ declare global {
       minimize: () => void;
       maximize: () => void;
       close: () => void;
+      store: {
+        getTeam: () => unknown;
+        setTeam: (team: unknown) => void;
+        getSettings: () => unknown;
+        setSettings: (settings: unknown) => void;
+        get: (key: string) => unknown;
+        set: (key: string, value: unknown) => void;
+        delete: (key: string) => void;
+        has: (key: string) => boolean;
+      };
     };
   }
 
