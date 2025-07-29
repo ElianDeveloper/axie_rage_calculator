@@ -1,69 +1,147 @@
-# React + TypeScript + Vite
+# Rage Calculator - Electron + React + Tailwind CSS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Una aplicación de escritorio construida con Electron, React, TypeScript y Tailwind CSS.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Electron** - Framework para aplicaciones de escritorio
+- **React 19** - Biblioteca de interfaz de usuario
+- **TypeScript** - Tipado estático para JavaScript
+- **Vite** - Herramienta de construcción rápida
+- **Tailwind CSS** - Framework de CSS utilitario
 
-## Expanding the ESLint configuration
+## 📋 Prerrequisitos
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js (versión 18 o superior)
+- npm o yarn
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🛠️ Instalación
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+1. Clona el repositorio:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone <url-del-repositorio>
+cd rage_calculator
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Instala las dependencias:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+## 🎯 Scripts disponibles
+
+### Desarrollo
+
+```bash
+# Ejecutar solo la aplicación React (modo desarrollo)
+npm run dev
+
+# Ejecutar la aplicación completa con Electron
+npm run electron:dev
+```
+
+### Construcción
+
+```bash
+# Construir la aplicación React
+npm run build
+
+# Vista previa de la aplicación construida
+npm run preview
+
+# Construir la aplicación completa con Electron
+npm run electron:build
+```
+
+## 📁 Estructura del proyecto
+
+```
+rage_calculator/
+├── electron/           # Archivos de Electron
+│   ├── main.mjs       # Proceso principal de Electron
+│   └── preload.js     # Script de precarga
+├── src/               # Código fuente de React
+│   ├── App.tsx        # Componente principal
+│   ├── main.tsx       # Punto de entrada
+│   └── index.css      # Estilos globales con Tailwind
+├── dist/              # Archivos construidos (generado)
+├── dist-electron/     # Ejecutables de Electron (generado)
+└── package.json       # Configuración del proyecto
+```
+
+## 🔧 Configuración
+
+### Electron
+
+- **main.mjs**: Configuración principal de Electron
+- **preload.js**: Script de precarga para APIs seguras
+
+### Tailwind CSS
+
+- **tailwind.config.ts**: Configuración de Tailwind
+- **src/index.css**: Importaciones de Tailwind
+
+### Vite
+
+- **vite.config.ts**: Configuración de Vite para React
+
+## 🚀 Ejecutar en desarrollo
+
+1. **Solo React (navegador)**:
+
+   ```bash
+   npm run dev
+   ```
+
+   Abre http://localhost:5173 en tu navegador
+
+2. **Con Electron**:
+   ```bash
+   npm run electron:dev
+   ```
+   Esto iniciará tanto el servidor de desarrollo como la aplicación Electron
+
+## 📦 Construir para producción
+
+```bash
+npm run electron:build
+```
+
+Esto creará ejecutables para tu plataforma en la carpeta `dist-electron/`.
+
+## 🎨 Personalización
+
+### Agregar estilos de Tailwind
+
+Los estilos de Tailwind están configurados en `src/index.css`. Puedes agregar clases de Tailwind directamente en tus componentes React.
+
+### Modificar la ventana de Electron
+
+Edita `electron/main.mjs` para cambiar el tamaño, título o comportamiento de la ventana.
+
+## 🐛 Solución de problemas
+
+### Error de preload script
+
+Si ves errores relacionados con el preload script, asegúrate de que:
+
+- El archivo `electron/preload.js` existe
+- Está usando sintaxis CommonJS (`require` en lugar de `import`)
+
+### Estilos de Tailwind no se cargan
+
+Verifica que:
+
+- `src/index.css` contiene las importaciones de Tailwind
+- `tailwind.config.ts` está configurado correctamente
+- No hay conflictos con otros archivos CSS
+
+### Error de puerto ocupado
+
+Si el puerto 5173 está ocupado, Vite automáticamente intentará usar otro puerto.
+
+## 📝 Licencia
+
+Este proyecto está bajo la Licencia MIT.
