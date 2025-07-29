@@ -1,76 +1,35 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
-// Crear instancia del store de manera segura
-let store = null;
-try {
-  const Store = require("electron-store");
-  store = new Store({
-    name: "rage-calculator-config", // Nombre del archivo de configuración
-    defaults: {
-      team: null, // Configuración del equipo
-      settings: {
-        theme: "dark",
-        language: "es",
-      },
-    },
-  });
-} catch (error) {
-  console.error("Error initializing electron-store:", error);
-}
-
 contextBridge.exposeInMainWorld("electronAPI", {
   minimize: () => ipcRenderer.send("window-minimize"),
   maximize: () => ipcRenderer.send("window-maximize"),
   close: () => ipcRenderer.send("window-close"),
 
-  // Métodos para el store
+  // Métodos para el store usando IPC
   store: {
     // Obtener configuración del equipo
-    getTeam: () => (store ? store.get("team") : null),
+    getTeam: () => ipcRenderer.invoke("store-get-team"),
 
     // Guardar configuración del equipo
-    setTeam: (team) => {
-      if (store) {
-        store.set("team", team);
-      } else {
-        console.log("Store no disponible");
-      }
-    },
+    setTeam: (team) => ipcRenderer.invoke("store-set-team", team),
 
     // Obtener configuración general
-    getSettings: () => (store ? store.get("settings") : null),
+    getSettings: () => ipcRenderer.invoke("store-get-settings"),
 
     // Guardar configuración general
-    setSettings: (settings) => {
-      if (store) {
-        store.set("settings", settings);
-      } else {
-        console.log("Store no disponible");
-      }
-    },
+    setSettings: (settings) =>
+      ipcRenderer.invoke("store-set-settings", settings),
 
     // Obtener cualquier valor
-    get: (key) => (store ? store.get(key) : null),
+    get: (key) => ipcRenderer.invoke("store-get", key),
 
     // Guardar cualquier valor
-    set: (key, value) => {
-      if (store) {
-        store.set(key, value);
-      } else {
-        console.log("Store no disponible");
-      }
-    },
+    set: (key, value) => ipcRenderer.invoke("store-set", key, value),
 
     // Eliminar un valor
-    delete: (key) => {
-      if (store) {
-        store.delete(key);
-      } else {
-        console.log("Store no disponible");
-      }
-    },
+    delete: (key) => ipcRenderer.invoke("store-delete", key),
 
     // Verificar si existe un valor
-    has: (key) => (store ? store.has(key) : false),
+    has: (key) => ipcRenderer.invoke("store-has", key),
   },
 });

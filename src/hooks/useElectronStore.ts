@@ -16,12 +16,12 @@ export function useElectronStore() {
 
   // Cargar datos iniciales de manera más segura
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
         // Verificar que estamos en un entorno de Electron
         if (typeof window !== "undefined" && window.electronAPI?.store) {
-          const savedTeam = window.electronAPI.store.getTeam();
-          const savedSettings = window.electronAPI.store.getSettings();
+          const savedTeam = await window.electronAPI.store.getTeam();
+          const savedSettings = await window.electronAPI.store.getSettings();
 
           if (savedTeam && typeof savedTeam === "object") {
             setTeamState(savedTeam as Team);
@@ -47,10 +47,10 @@ export function useElectronStore() {
   }, []);
 
   // Guardar equipo
-  const saveTeam = useCallback((newTeam: Team) => {
+  const saveTeam = useCallback(async (newTeam: Team) => {
     try {
       if (typeof window !== "undefined" && window.electronAPI?.store) {
-        window.electronAPI.store.setTeam(newTeam);
+        await window.electronAPI.store.setTeam(newTeam);
         setTeamState(newTeam);
       }
     } catch (error) {

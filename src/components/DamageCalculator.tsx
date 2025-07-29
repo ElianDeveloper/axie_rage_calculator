@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Team, DamageConfig } from "../types/axie";
 import { TEAM_CARDS } from "../data/cards";
 import { RUNES } from "../data/runes";
 import { calculateCardDamage } from "../utils/damageCalculator";
+import { useElectronStore } from "../hooks/useElectronStore";
 
 export function DamageCalculator() {
+  const { team: savedTeam } = useElectronStore();
+
   const [team, setTeam] = useState<Team>({
     front: {
       id: "front",
@@ -51,6 +54,38 @@ export function DamageCalculator() {
     damageReduction: 0,
     targetHasAlert: false,
   });
+
+  // Cargar configuración guardada y mostrar log
+  useEffect(() => {
+    if (savedTeam) {
+      console.log("=== CONFIGURACIÓN GUARDADA CARGADA ===");
+      console.log("Equipo completo:", savedTeam);
+
+      // Log detallado de cada axie
+      Object.entries(savedTeam).forEach(([position, axie]) => {
+        console.log(`\n--- ${position.toUpperCase()} ---`);
+        console.log("Runa:", axie.rune?.name || "Sin runa");
+        console.log("Cartas:");
+        Object.entries(axie.cards).forEach(([cardType, card]) => {
+          const typedCard = card as {
+            name: string;
+            isEvolved: boolean;
+            amuletBonus: number;
+          };
+          console.log(
+            `  ${cardType}: ${typedCard.name} - Evolucionada: ${typedCard.isEvolved} - Amuleto: +${typedCard.amuletBonus}`
+          );
+        });
+      });
+
+      console.log("=== FIN CONFIGURACIÓN ===");
+
+      // Cargar la configuración en el estado local
+      setTeam(savedTeam);
+    } else {
+      console.log("No hay configuración guardada disponible");
+    }
+  }, [savedTeam]);
 
   const [selectedAxie, setSelectedAxie] = useState<"front" | "mid" | "back">(
     "front"
