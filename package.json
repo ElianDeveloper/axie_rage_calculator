@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "main": "electron/main.cjs",
+  "description": "Calculadora de daño de Rage para el juego Axie Infinity",
+  "author": "e_dev",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
