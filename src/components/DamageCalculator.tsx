@@ -54,6 +54,11 @@ export function DamageCalculator() {
     targetHasAlert: false,
   });
 
+  const [selectedCard, setSelectedCard] = useState<{
+    position: "front" | "mid" | "back";
+    cardType: "ears" | "horn" | "back" | "tail";
+  } | null>(null);
+
   // Cargar configuración guardada y mostrar log
   useEffect(() => {
     if (savedTeam) {
@@ -78,6 +83,34 @@ export function DamageCalculator() {
       },
     }));
   };
+
+  const handleCardClick = (
+    position: "front" | "mid" | "back",
+    cardType: "ears" | "horn" | "back" | "tail"
+  ) => {
+    setSelectedCard({ position, cardType });
+  };
+
+  const getSelectedCardBreakdown = () => {
+    if (!selectedCard) return null;
+
+    const axie = team[selectedCard.position];
+    const card = axie.cards[selectedCard.cardType];
+    const damageCalculation = calculateCardDamage(
+      axie,
+      selectedCard.cardType,
+      damageConfig
+    );
+
+    return {
+      card,
+      damageCalculation,
+      position: selectedCard.position,
+      cardType: selectedCard.cardType,
+    };
+  };
+
+  const selectedBreakdown = getSelectedCardBreakdown();
 
   return (
     <div className="h-full bg-gray-900 text-white p-6 overflow-auto">
@@ -197,6 +230,72 @@ export function DamageCalculator() {
           </div>
         </div>
 
+        {/* Breakdown Detallado */}
+        {selectedBreakdown && (
+          <div className="bg-gray-800 rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-yellow-400">
+                Breakdown: {selectedBreakdown.card.name} (
+                {selectedBreakdown.position.toUpperCase()})
+              </h2>
+              <button
+                onClick={() => setSelectedCard(null)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-blue-400 mb-2">
+                  Cálculo:
+                </h3>
+                <div className="space-y-1 text-sm">
+                  {selectedBreakdown.damageCalculation.breakdown.map(
+                    (step, index) => (
+                      <div key={index} className="text-gray-300">
+                        {step}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-green-400 mb-2">
+                  Resumen:
+                </h3>
+                <div className="space-y-1 text-sm">
+                  <div>
+                    Daño base: {selectedBreakdown.damageCalculation.baseDamage}
+                  </div>
+                  <div>
+                    Amuleto: +{selectedBreakdown.damageCalculation.amuletBonus}
+                  </div>
+                  <div>
+                    Efectos especiales: +
+                    {selectedBreakdown.damageCalculation.specialEffects}
+                  </div>
+                  <div>
+                    Furia: +{selectedBreakdown.damageCalculation.furyBonus}
+                  </div>
+                  <div>
+                    Rage: +{selectedBreakdown.damageCalculation.rageBonus}
+                  </div>
+                  <div>
+                    Runa: +{selectedBreakdown.damageCalculation.runeBonus}
+                  </div>
+                  <div className="text-yellow-400 font-bold">
+                    Total: {selectedBreakdown.damageCalculation.totalDamage}
+                  </div>
+                  <div className="text-red-400 font-bold">
+                    Final: {selectedBreakdown.damageCalculation.finalDamage}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Equipo Completo */}
         <div className="space-y-4">
           {/* Front */}
@@ -204,6 +303,11 @@ export function DamageCalculator() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-bold text-blue-400">Front</h2>
               <div className="flex items-center space-x-2">
+                {team.front.furyState.isInFury && (
+                  <span className="text-red-400 text-sm font-bold animate-pulse">
+                    ¡FURIA!
+                  </span>
+                )}
                 <label className="text-sm font-medium">Rage:</label>
                 <button
                   onClick={() =>
@@ -240,11 +344,6 @@ export function DamageCalculator() {
                 >
                   +
                 </button>
-                {team.front.furyState.isInFury && (
-                  <span className="text-red-400 text-sm font-bold animate-pulse">
-                    ¡FURIA!
-                  </span>
-                )}
               </div>
             </div>
 
@@ -259,7 +358,11 @@ export function DamageCalculator() {
                 );
 
                 return (
-                  <div key={cardType} className="bg-gray-700 rounded p-2">
+                  <div
+                    key={cardType}
+                    className="bg-gray-700 rounded p-2 cursor-pointer hover:bg-gray-600 transition-colors"
+                    onClick={() => handleCardClick("front", cardType)}
+                  >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-green-400 truncate">
                         {card.name}
@@ -279,6 +382,11 @@ export function DamageCalculator() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-bold text-green-400">Mid</h2>
               <div className="flex items-center space-x-2">
+                {team.mid.furyState.isInFury && (
+                  <span className="text-red-400 text-sm font-bold animate-pulse">
+                    ¡FURIA!
+                  </span>
+                )}
                 <label className="text-sm font-medium">Rage:</label>
                 <button
                   onClick={() =>
@@ -312,11 +420,6 @@ export function DamageCalculator() {
                 >
                   +
                 </button>
-                {team.mid.furyState.isInFury && (
-                  <span className="text-red-400 text-sm font-bold animate-pulse">
-                    ¡FURIA!
-                  </span>
-                )}
               </div>
             </div>
 
@@ -331,7 +434,11 @@ export function DamageCalculator() {
                 );
 
                 return (
-                  <div key={cardType} className="bg-gray-700 rounded p-2">
+                  <div
+                    key={cardType}
+                    className="bg-gray-700 rounded p-2 cursor-pointer hover:bg-gray-600 transition-colors"
+                    onClick={() => handleCardClick("mid", cardType)}
+                  >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-green-400 truncate">
                         {card.name}
@@ -351,6 +458,11 @@ export function DamageCalculator() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-bold text-purple-400">Back</h2>
               <div className="flex items-center space-x-2">
+                {team.back.furyState.isInFury && (
+                  <span className="text-red-400 text-sm font-bold animate-pulse">
+                    ¡FURIA!
+                  </span>
+                )}
                 <label className="text-sm font-medium">Rage:</label>
                 <button
                   onClick={() =>
@@ -387,11 +499,6 @@ export function DamageCalculator() {
                 >
                   +
                 </button>
-                {team.back.furyState.isInFury && (
-                  <span className="text-red-400 text-sm font-bold animate-pulse">
-                    ¡FURIA!
-                  </span>
-                )}
               </div>
             </div>
 
@@ -406,7 +513,11 @@ export function DamageCalculator() {
                 );
 
                 return (
-                  <div key={cardType} className="bg-gray-700 rounded p-2">
+                  <div
+                    key={cardType}
+                    className="bg-gray-700 rounded p-2 cursor-pointer hover:bg-gray-600 transition-colors"
+                    onClick={() => handleCardClick("back", cardType)}
+                  >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-green-400 truncate">
                         {card.name}

@@ -20,19 +20,101 @@ export function calculateCardDamage(
   const card = axie.cards[cardType];
   const breakdown: string[] = [];
 
-  // Daño base de la carta
+  // 1. Daño base de la carta
   const baseDamage = card.isEvolved ? card.evolvedAttack : card.baseAttack;
   breakdown.push(`Daño base: ${baseDamage}`);
 
-  // Bonus de amuleto
+  // 2. Bonus de amuleto
   const amuletBonus = card.amuletBonus;
   if (amuletBonus > 0) {
     breakdown.push(`Amuleto: +${amuletBonus}`);
   }
 
-  // Bonus de furia por Inspirational Hero
+  // 3. Efectos especiales de las cartas
+  let specialEffects = 0;
+
+  // Efecto de IMP (bonus en furia)
+  if (cardType === "horn" && axie.furyState.isInFury) {
+    specialEffects += 35;
+    breakdown.push(`IMP en furia: +35`);
+  }
+
+  // Efecto de RONIN (bonus por energía gastada) - se calcula sobre el daño base
+  if (cardType === "back") {
+    const roninBonus = Math.floor(
+      (baseDamage + amuletBonus) * 0.5 * axie.energySpent
+    );
+    specialEffects += roninBonus;
+    if (roninBonus > 0) {
+      breakdown.push(`RONIN (${axie.energySpent} energía): +${roninBonus}`);
+    }
+  }
+
+  // Daño después de efectos especiales
+  const damageAfterSpecialEffects = baseDamage + amuletBonus + specialEffects;
+
+  // 4. Bonus de runa (Way of Beast, etc.) - ANTES del bonus de furia
+  let runeBonus = 0;
+  if (axie.rune) {
+    if (axie.rune.damageBonus) {
+      const runeDamageBonus = Math.floor(
+        (damageAfterSpecialEffects * axie.rune.damageBonus) / 100
+      );
+      runeBonus += runeDamageBonus;
+      breakdown.push(`${axie.rune.name} daño: +${runeDamageBonus}`);
+    }
+
+    // Efecto de Blood Beetle (pure damage)
+    if (
+      axie.rune.name.includes("Blood Beetle") &&
+      axie.pureDamageUsed < (axie.rune.pureDamageCount || 0)
+    ) {
+      const bloodBeetleBonus = Math.floor(
+        (damageAfterSpecialEffects * (axie.rune.pureDamageBonus || 0)) / 100
+      );
+      runeBonus += bloodBeetleBonus;
+      breakdown.push(`Blood Beetle pure damage: +${bloodBeetleBonus}`);
+    }
+  }
+
+  // Daño después de runas (pero antes de furia)
+  const damageAfterRunes = damageAfterSpecialEffects + runeBonus;
+
+  // 5. Bonus de furia (50% cuando está en furia, modificado por runas)
+  let furyDamageBonus = 0;
+  if (axie.furyState.isInFury) {
+    let furyPercentage = 50; // Bonus base de furia
+
+    // Modificar el porcentaje de furia según las runas
+    if (axie.rune && axie.rune.furyDamageBonus) {
+      furyPercentage += axie.rune.furyDamageBonus;
+      breakdown.push(
+        `Furia (${furyPercentage}%): +${Math.floor(
+          (damageAfterRunes * furyPercentage) / 100
+        )}`
+      );
+    } else {
+      breakdown.push(`Furia (50%): +${Math.floor(damageAfterRunes * 0.5)}`);
+    }
+
+    furyDamageBonus = Math.floor((damageAfterRunes * furyPercentage) / 100);
+  }
+
+  // Daño después de furia
+  const damageAfterFury = damageAfterRunes + furyDamageBonus;
+
+  // Bonus de rage (SOLO cuando NO está en modo furia)
+  let rageBonus = 0;
+  if (!axie.furyState.isInFury && axie.furyState.rageStacks > 0) {
+    const ragePerStack = axie.rune?.ragePerStack || 1;
+    rageBonus = axie.furyState.rageStacks * ragePerStack;
+    breakdown.push(`Rage (${axie.furyState.rageStacks} stacks): +${rageBonus}`);
+  }
+
+  // Bonus de furia por Inspirational Hero (solo cuando NO está en furia)
   let furyBonus = 0;
   if (
+    !axie.furyState.isInFury &&
     axie.rune?.name.includes("Inspirational Hero") &&
     axie.furyState.alliesInFury > 0
   ) {
@@ -44,80 +126,10 @@ export function calculateCardDamage(
     );
   }
 
-  // Daño total antes de efectos especiales
-  let totalDamage = baseDamage + amuletBonus + furyBonus;
-
-  // Efectos especiales de las cartas
-  let specialEffects = 0;
-
-  // Efecto de IMP (bonus en furia)
-  if (cardType === "horn" && axie.furyState.isInFury) {
-    specialEffects += 35;
-    breakdown.push(`IMP en furia: +35`);
-  }
-
-  // Efecto de RONIN (bonus por energía gastada)
-  if (cardType === "back") {
-    const roninBonus = Math.floor(totalDamage * 0.5 * axie.energySpent);
-    specialEffects += roninBonus;
-    if (roninBonus > 0) {
-      breakdown.push(`RONIN (${axie.energySpent} energía): +${roninBonus}`);
-    }
-  }
-
-  totalDamage += specialEffects;
-
-  // Bonus de rage
-  const ragePerStack = axie.rune?.ragePerStack || 1;
-  const rageBonus = axie.furyState.rageStacks * ragePerStack;
-  if (rageBonus > 0) {
-    breakdown.push(`Rage (${axie.furyState.rageStacks} stacks): +${rageBonus}`);
-  }
-
-  // Bonus de runa (Way of Beast, etc.)
-  let runeBonus = 0;
-  if (axie.rune) {
-    if (axie.rune.damageBonus) {
-      const runeDamageBonus = Math.floor(
-        (totalDamage * axie.rune.damageBonus) / 100
-      );
-      runeBonus += runeDamageBonus;
-      breakdown.push(`${axie.rune.name} daño: +${runeDamageBonus}`);
-    }
-
-    if (axie.rune.furyDamageBonus && axie.furyState.isInFury) {
-      const furyRuneBonus = Math.floor(
-        (totalDamage * axie.rune.furyDamageBonus) / 100
-      );
-      runeBonus += furyRuneBonus;
-      breakdown.push(`${axie.rune.name} furia: +${furyRuneBonus}`);
-    }
-
-    // Efecto de Blood Beetle (pure damage)
-    if (
-      axie.rune.name.includes("Blood Beetle") &&
-      axie.pureDamageUsed < (axie.rune.pureDamageCount || 0)
-    ) {
-      const bloodBeetleBonus = Math.floor(
-        (totalDamage * (axie.rune.pureDamageBonus || 0)) / 100
-      );
-      runeBonus += bloodBeetleBonus;
-      breakdown.push(`Blood Beetle pure damage: +${bloodBeetleBonus}`);
-    }
-  }
-
-  // Bonus de furia (50% cuando está en furia)
-  let furyDamageBonus = 0;
-  if (axie.furyState.isInFury) {
-    furyDamageBonus = Math.floor(totalDamage * 0.5);
-    breakdown.push(`Furia (50%): +${furyDamageBonus}`);
-  }
-
   // Cálculo final
-  const finalTotalDamage =
-    totalDamage + rageBonus + runeBonus + furyDamageBonus;
+  const finalTotalDamage = damageAfterFury + rageBonus + furyBonus;
 
-  // Aplicar reducción de daño
+  // 6. Aplicar reducción de daño
   const damageReduction = damageConfig.damageReduction;
   const finalDamage = Math.max(
     1,
