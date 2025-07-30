@@ -25,7 +25,7 @@
       "category": "public.app-category.utilities"
     },
     "win": {
-      "target": "nsis"
+      "target": "portable"
     },
     "linux": {
       "target": "AppImage"
