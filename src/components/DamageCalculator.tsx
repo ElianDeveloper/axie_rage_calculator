@@ -232,65 +232,328 @@ export function DamageCalculator() {
 
         {/* Breakdown Detallado */}
         {selectedBreakdown && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-yellow-400">
-                Breakdown: {selectedBreakdown.card.name} (
-                {selectedBreakdown.position.toUpperCase()})
-              </h2>
+          <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 rounded-xl p-8 mb-8 border border-gray-700 shadow-2xl">
+            {/* Header con efecto de cristal */}
+            <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-lg border border-blue-500/30">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-lg">
+                    {selectedBreakdown.card.name.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
+                    {selectedBreakdown.card.name}
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    {selectedBreakdown.position.toUpperCase()} •{" "}
+                    {selectedBreakdown.cardType}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedCard(null)}
-                className="text-gray-400 hover:text-white"
+                className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center transition-all duration-200 hover:scale-110"
               >
                 ✕
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-blue-400 mb-2">
-                  Cálculo:
-                </h3>
-                <div className="space-y-1 text-sm">
-                  {selectedBreakdown.damageCalculation.breakdown.map(
-                    (step, index) => (
-                      <div key={index} className="text-gray-300">
-                        {step}
-                      </div>
-                    )
-                  )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Columna 1: Proceso de Cálculo */}
+              <div className="lg:col-span-2">
+                <div className="bg-gray-900/50 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Proceso de Cálculo
+                  </h3>
+                  <div className="space-y-3">
+                    {selectedBreakdown.damageCalculation.breakdown.map(
+                      (step, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center p-3 bg-gray-800/50 rounded-lg border-l-4 border-blue-500 hover:bg-gray-800/70 transition-all duration-200"
+                        >
+                          <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-3">
+                            {index + 1}
+                          </div>
+                          <span className="text-gray-200 text-sm font-medium">
+                            {step}
+                          </span>
+                        </div>
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-green-400 mb-2">
-                  Resumen:
-                </h3>
-                <div className="space-y-1 text-sm">
-                  <div>
-                    Daño base: {selectedBreakdown.damageCalculation.baseDamage}
+
+              {/* Columna 2: Resumen Visual */}
+              <div className="lg:col-span-1">
+                <div className="bg-gray-900/50 rounded-lg p-6 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-green-400 mb-4 flex items-center">
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Resumen
+                  </h3>
+
+                  {/* Daño Base */}
+                  <div className="mb-4 p-3 bg-gradient-to-r from-blue-900/30 to-blue-800/30 rounded-lg border border-blue-500/30">
+                    <div className="flex justify-between items-center">
+                      <span className="text-blue-300 text-sm font-medium">
+                        Daño Base
+                      </span>
+                      <span className="text-blue-200 font-bold">
+                        {selectedBreakdown.damageCalculation.baseDamage}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    Amuleto: +{selectedBreakdown.damageCalculation.amuletBonus}
+
+                  {/* Amuleto */}
+                  {selectedBreakdown.damageCalculation.amuletBonus > 0 && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-purple-900/30 to-purple-800/30 rounded-lg border border-purple-500/30">
+                      <div className="flex justify-between items-center">
+                        <span className="text-purple-300 text-sm font-medium">
+                          Amuleto
+                        </span>
+                        <span className="text-purple-200 font-bold">
+                          +{selectedBreakdown.damageCalculation.amuletBonus}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Efectos Especiales */}
+                  {selectedBreakdown.damageCalculation.specialEffects > 0 && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-orange-900/30 to-orange-800/30 rounded-lg border border-orange-500/30">
+                      <div className="flex justify-between items-center">
+                        <span className="text-orange-300 text-sm font-medium">
+                          Efectos Especiales
+                        </span>
+                        <span className="text-orange-200 font-bold">
+                          +{selectedBreakdown.damageCalculation.specialEffects}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Furia */}
+                  {selectedBreakdown.damageCalculation.furyBonus > 0 && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-red-900/30 to-red-800/30 rounded-lg border border-red-500/30">
+                      <div className="flex justify-between items-center">
+                        <span className="text-red-300 text-sm font-medium">
+                          Furia
+                        </span>
+                        <span className="text-red-200 font-bold">
+                          +{selectedBreakdown.damageCalculation.furyBonus}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rage */}
+                  {selectedBreakdown.damageCalculation.rageBonus > 0 && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-yellow-900/30 to-yellow-800/30 rounded-lg border border-yellow-500/30">
+                      <div className="flex justify-between items-center">
+                        <span className="text-yellow-300 text-sm font-medium">
+                          Rage
+                        </span>
+                        <span className="text-yellow-200 font-bold">
+                          +{selectedBreakdown.damageCalculation.rageBonus}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Runa */}
+                  {selectedBreakdown.damageCalculation.runeBonus > 0 && (
+                    <div className="mb-4 p-3 bg-gradient-to-r from-green-900/30 to-green-800/30 rounded-lg border border-green-500/30">
+                      <div className="flex justify-between items-center">
+                        <span className="text-green-300 text-sm font-medium">
+                          Runa
+                        </span>
+                        <span className="text-green-200 font-bold">
+                          +{selectedBreakdown.damageCalculation.runeBonus}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total */}
+                  <div className="mb-4 p-4 bg-gradient-to-r from-yellow-900/40 to-orange-900/40 rounded-lg border border-yellow-500/50">
+                    <div className="flex justify-between items-center">
+                      <span className="text-yellow-300 text-sm font-medium">
+                        Total
+                      </span>
+                      <span className="text-yellow-200 font-bold text-lg">
+                        {selectedBreakdown.damageCalculation.totalDamage}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    Efectos especiales: +
-                    {selectedBreakdown.damageCalculation.specialEffects}
-                  </div>
-                  <div>
-                    Furia: +{selectedBreakdown.damageCalculation.furyBonus}
-                  </div>
-                  <div>
-                    Rage: +{selectedBreakdown.damageCalculation.rageBonus}
-                  </div>
-                  <div>
-                    Runa: +{selectedBreakdown.damageCalculation.runeBonus}
-                  </div>
-                  <div className="text-yellow-400 font-bold">
-                    Total: {selectedBreakdown.damageCalculation.totalDamage}
-                  </div>
-                  <div className="text-red-400 font-bold">
-                    Final: {selectedBreakdown.damageCalculation.finalDamage}
+
+                  {/* Final */}
+                  <div className="p-4 bg-gradient-to-r from-red-900/40 to-red-800/40 rounded-lg border border-red-500/50 shadow-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-red-300 text-sm font-medium">
+                        Daño Final
+                      </span>
+                      <span className="text-red-200 font-bold text-xl">
+                        {selectedBreakdown.damageCalculation.finalDamage}
+                      </span>
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Barra de progreso visual */}
+            <div className="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+              <h4 className="text-sm font-medium text-gray-300 mb-3">
+                Progresión del Daño
+              </h4>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <span className="text-xs text-gray-400 w-16">Base</span>
+                  <div className="flex-1 bg-gray-700 rounded-full h-2 mr-2">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${
+                          (selectedBreakdown.damageCalculation.baseDamage /
+                            selectedBreakdown.damageCalculation.totalDamage) *
+                          100
+                        }%`,
+                      }}
+                    ></div>
+                  </div>
+                  <span className="text-xs text-gray-400 w-12">
+                    {selectedBreakdown.damageCalculation.baseDamage}
+                  </span>
+                </div>
+
+                {selectedBreakdown.damageCalculation.amuletBonus > 0 && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-400 w-16">Amuleto</span>
+                    <div className="flex-1 bg-gray-700 rounded-full h-2 mr-2">
+                      <div
+                        className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            (selectedBreakdown.damageCalculation.amuletBonus /
+                              selectedBreakdown.damageCalculation.totalDamage) *
+                            100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-400 w-12">
+                      +{selectedBreakdown.damageCalculation.amuletBonus}
+                    </span>
+                  </div>
+                )}
+
+                {selectedBreakdown.damageCalculation.specialEffects > 0 && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-400 w-16">Especial</span>
+                    <div className="flex-1 bg-gray-700 rounded-full h-2 mr-2">
+                      <div
+                        className="bg-orange-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            (selectedBreakdown.damageCalculation
+                              .specialEffects /
+                              selectedBreakdown.damageCalculation.totalDamage) *
+                            100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-400 w-12">
+                      +{selectedBreakdown.damageCalculation.specialEffects}
+                    </span>
+                  </div>
+                )}
+
+                {selectedBreakdown.damageCalculation.furyBonus > 0 && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-400 w-16">Furia</span>
+                    <div className="flex-1 bg-gray-700 rounded-full h-2 mr-2">
+                      <div
+                        className="bg-red-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            (selectedBreakdown.damageCalculation.furyBonus /
+                              selectedBreakdown.damageCalculation.totalDamage) *
+                            100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-400 w-12">
+                      +{selectedBreakdown.damageCalculation.furyBonus}
+                    </span>
+                  </div>
+                )}
+
+                {selectedBreakdown.damageCalculation.rageBonus > 0 && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-400 w-16">Rage</span>
+                    <div className="flex-1 bg-gray-700 rounded-full h-2 mr-2">
+                      <div
+                        className="bg-yellow-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            (selectedBreakdown.damageCalculation.rageBonus /
+                              selectedBreakdown.damageCalculation.totalDamage) *
+                            100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-400 w-12">
+                      +{selectedBreakdown.damageCalculation.rageBonus}
+                    </span>
+                  </div>
+                )}
+
+                {selectedBreakdown.damageCalculation.runeBonus > 0 && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-400 w-16">Runa</span>
+                    <div className="flex-1 bg-gray-700 rounded-full h-2 mr-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                        style={{
+                          width: `${
+                            (selectedBreakdown.damageCalculation.runeBonus /
+                              selectedBreakdown.damageCalculation.totalDamage) *
+                            100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-400 w-12">
+                      +{selectedBreakdown.damageCalculation.runeBonus}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
