@@ -7,6 +7,12 @@ import { useElectronStore } from "../hooks/useElectronStore";
 export function TeamConfigurator() {
   const { team, saveTeam } = useElectronStore();
 
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState<"success" | "error">(
+    "success"
+  );
+  const [notificationMessage, setNotificationMessage] = useState("");
+
   const [localTeam, setLocalTeam] = useState<Team>({
     front: {
       id: "front",
@@ -152,8 +158,34 @@ export function TeamConfigurator() {
     try {
       saveTeam(localTeam);
       console.log("Configuración guardada exitosamente");
+
+      // Mostrar notificación de éxito
+      setNotificationType("success");
+      setNotificationMessage("¡Configuración guardada exitosamente!");
+      setShowNotification(true);
+
+      // Ocultar la notificación después de 3 segundos
+      const timeoutId = setTimeout(() => {
+        setShowNotification(false);
+      }, 3000);
+
+      // Limpiar el timeout si el componente se desmonta
+      return () => clearTimeout(timeoutId);
     } catch (error) {
       console.error("Error saving configuration:", error);
+
+      // Mostrar notificación de error
+      setNotificationType("error");
+      setNotificationMessage("Error al guardar la configuración");
+      setShowNotification(true);
+
+      // Ocultar la notificación después de 3 segundos
+      const timeoutId = setTimeout(() => {
+        setShowNotification(false);
+      }, 3000);
+
+      // Limpiar el timeout si el componente se desmonta
+      return () => clearTimeout(timeoutId);
     }
   };
 
@@ -190,6 +222,36 @@ export function TeamConfigurator() {
 
   return (
     <div className="h-full bg-gray-900 text-white p-6 overflow-auto">
+      {/* Notificación */}
+      {showNotification && (
+        <div
+          className={`fixed top-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 ease-in-out animate-bounce ${
+            notificationType === "success" ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
+          <div className="flex items-center space-x-2">
+            {notificationType === "success" ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+            <span className="font-medium">{notificationMessage}</span>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-yellow-400 mb-2">
