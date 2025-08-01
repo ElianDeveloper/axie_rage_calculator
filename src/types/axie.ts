@@ -9,7 +9,16 @@ export interface Card {
   effect?: string;
 }
 
-// Tipos para las runas
+// Tipos para las runas personalizadas
+export interface CustomRune {
+  damageBonus?: number; // Porcentaje de daño adicional
+  furyDamageBonus?: number; // Porcentaje de daño adicional en furia
+}
+
+// Tipo de runa seleccionada
+export type RuneType = "none" | "defined" | "custom";
+
+// Tipos para las runas (mantener para compatibilidad)
 export interface Rune {
   id: string;
   name: string;
@@ -43,7 +52,9 @@ export interface Axie {
     back: Card;
     tail: Card;
   };
-  rune?: Rune;
+  runeType: RuneType; // Tipo de runa seleccionada
+  customRune?: CustomRune; // Nueva runa personalizada
+  rune?: Rune; // Mantener para compatibilidad
   furyState: FuryState;
   energySpent: number; // Para el efecto de RONIN
   pureDamageUsed: number; // Para el efecto de Blood Beetle

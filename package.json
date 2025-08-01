@@ -1,7 +1,7 @@
 {
   "name": "rage_calculator",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.2",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "Calculadora de daño de Rage para el juego Axie Infinity",

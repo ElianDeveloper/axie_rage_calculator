@@ -55,7 +55,17 @@ export function calculateCardDamage(
 
   // 4. Bonus de runa (Way of Beast, etc.) - ANTES del bonus de furia
   let runeBonus = 0;
-  if (axie.rune) {
+
+  // Usar runa personalizada si está configurada
+  if (axie.runeType === "custom" && axie.customRune?.damageBonus) {
+    const runeDamageBonus = Math.floor(
+      (damageAfterSpecialEffects * axie.customRune.damageBonus) / 100
+    );
+    runeBonus += runeDamageBonus;
+    breakdown.push(`Runa personalizada daño: +${runeDamageBonus}`);
+  }
+  // Mantener compatibilidad con runas por defecto
+  else if (axie.runeType === "defined" && axie.rune) {
     if (axie.rune.damageBonus) {
       const runeDamageBonus = Math.floor(
         (damageAfterSpecialEffects * axie.rune.damageBonus) / 100
@@ -85,8 +95,21 @@ export function calculateCardDamage(
   if (axie.furyState.isInFury) {
     let furyPercentage = 50; // Bonus base de furia
 
-    // Modificar el porcentaje de furia según las runas
-    if (axie.rune && axie.rune.furyDamageBonus) {
+    // Modificar el porcentaje de furia según las runas personalizadas
+    if (axie.runeType === "custom" && axie.customRune?.furyDamageBonus) {
+      furyPercentage += axie.customRune.furyDamageBonus;
+      breakdown.push(
+        `Furia (${furyPercentage}%): +${Math.floor(
+          (damageAfterRunes * furyPercentage) / 100
+        )}`
+      );
+    }
+    // Mantener compatibilidad con runas por defecto
+    else if (
+      axie.runeType === "defined" &&
+      axie.rune &&
+      axie.rune.furyDamageBonus
+    ) {
       furyPercentage += axie.rune.furyDamageBonus;
       breakdown.push(
         `Furia (${furyPercentage}%): +${Math.floor(

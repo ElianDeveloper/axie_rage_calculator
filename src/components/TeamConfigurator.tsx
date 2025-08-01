@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Team } from "../types/axie";
+import type { Team, CustomRune, RuneType } from "../types/axie";
 import { TEAM_CARDS } from "../data/cards";
 import { RUNES } from "../data/runes";
 import { useElectronStore } from "../hooks/useElectronStore";
@@ -23,6 +23,7 @@ export function TeamConfigurator() {
         back: { ...TEAM_CARDS.ronin },
         tail: { ...TEAM_CARDS.shiba },
       },
+      runeType: "none",
       furyState: { isInFury: false, rageStacks: 0, alliesInFury: 0 },
       energySpent: 0,
       pureDamageUsed: 0,
@@ -36,6 +37,7 @@ export function TeamConfigurator() {
         back: { ...TEAM_CARDS.ronin },
         tail: { ...TEAM_CARDS.shiba },
       },
+      runeType: "none",
       furyState: { isInFury: false, rageStacks: 0, alliesInFury: 0 },
       energySpent: 0,
       pureDamageUsed: 0,
@@ -49,6 +51,7 @@ export function TeamConfigurator() {
         back: { ...TEAM_CARDS.ronin },
         tail: { ...TEAM_CARDS.shiba },
       },
+      runeType: "none",
       furyState: { isInFury: false, rageStacks: 0, alliesInFury: 0 },
       energySpent: 0,
       pureDamageUsed: 0,
@@ -58,7 +61,26 @@ export function TeamConfigurator() {
   // Cargar equipo guardado cuando esté disponible
   useEffect(() => {
     if (team) {
-      setLocalTeam(team);
+      // Verificar que el equipo tenga la estructura correcta
+      const validatedTeam = {
+        front: {
+          ...team.front,
+          runeType: team.front.runeType || "none",
+          customRune: team.front.customRune || undefined,
+        },
+        mid: {
+          ...team.mid,
+          runeType: team.mid.runeType || "none",
+          customRune: team.mid.customRune || undefined,
+        },
+        back: {
+          ...team.back,
+          runeType: team.back.runeType || "none",
+          customRune: team.back.customRune || undefined,
+        },
+      };
+
+      setLocalTeam(validatedTeam);
     }
   }, [team]);
 
@@ -118,6 +140,29 @@ export function TeamConfigurator() {
     }
   };
 
+  const handleRuneTypeChange = (runeType: RuneType) => {
+    const newTeam = {
+      ...localTeam,
+      [selectedAxie]: {
+        ...localTeam[selectedAxie],
+        runeType,
+        // Limpiar runas cuando se cambia el tipo
+        rune: runeType === "defined" ? localTeam[selectedAxie].rune : undefined,
+        customRune:
+          runeType === "custom"
+            ? localTeam[selectedAxie].customRune
+            : undefined,
+      },
+    };
+
+    setLocalTeam(newTeam);
+    try {
+      saveTeam(newTeam);
+    } catch (error) {
+      console.error("Error saving team:", error);
+    }
+  };
+
   const handleRuneChange = (runeKey: string, level: number) => {
     if (!runeKey) {
       const newTeam = {
@@ -154,10 +199,36 @@ export function TeamConfigurator() {
     }
   };
 
+  const handleCustomRuneChange = (field: keyof CustomRune, value: number) => {
+    const currentCustomRune = localTeam[selectedAxie].customRune || {};
+    const newCustomRune = {
+      ...currentCustomRune,
+      [field]: value > 0 ? value : undefined,
+    };
+
+    // Si no hay valores válidos, eliminar la runa personalizada
+    const hasValidValues = Object.values(newCustomRune).some(
+      (val) => val !== undefined && val > 0
+    );
+
+    const newTeam = {
+      ...localTeam,
+      [selectedAxie]: {
+        ...localTeam[selectedAxie],
+        customRune: hasValidValues ? newCustomRune : undefined,
+      },
+    };
+    setLocalTeam(newTeam);
+    try {
+      saveTeam(newTeam);
+    } catch (error) {
+      console.error("Error saving team:", error);
+    }
+  };
+
   const handleSaveConfiguration = () => {
     try {
       saveTeam(localTeam);
-      console.log("Configuración guardada exitosamente");
 
       // Mostrar notificación de éxito
       setNotificationType("success");
@@ -312,11 +383,17 @@ export function TeamConfigurator() {
                 <h2 className="text-2xl font-bold text-green-400">
                   Configuración - {getAxieDisplayName(selectedAxie)}
                 </h2>
-                {currentAxie.rune && (
+                {currentAxie.runeType === "defined" && currentAxie.rune && (
                   <div className="bg-purple-600 px-3 py-1 rounded-full text-sm">
                     {currentAxie.rune.name}
                   </div>
                 )}
+                {currentAxie.runeType === "custom" &&
+                  currentAxie.customRune && (
+                    <div className="bg-purple-600 px-3 py-1 rounded-full text-sm">
+                      Runa Personalizada
+                    </div>
+                  )}
               </div>
 
               {/* Selector de cartas */}
@@ -421,103 +498,346 @@ export function TeamConfigurator() {
               <div className="mt-6">
                 <h3 className="text-lg font-bold text-purple-400 mb-4">Runa</h3>
 
-                {/* Sin runa */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
+                {/* Selector de tipo de runa */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {/* Sin Runa */}
                   <div
-                    onClick={() => handleRuneChange("", 0)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all group relative ${
-                      !currentAxie.rune
+                    onClick={() => handleRuneTypeChange("none")}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all group relative ${
+                      currentAxie.runeType === "none"
                         ? "border-purple-500 bg-purple-900/20"
                         : "border-gray-600 bg-gray-700 hover:border-gray-500"
                     }`}
                   >
                     <div className="text-center">
-                      <div className="w-8 h-8 bg-gray-500 rounded-full mx-auto mb-2 flex items-center justify-center">
-                        <span className="text-xs text-white">-</span>
+                      <div className="w-10 h-10 bg-gray-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-sm text-white">-</span>
                       </div>
-                      <div className="text-xs font-medium text-white">
+                      <div className="text-sm font-medium text-white">
                         Sin Runa
                       </div>
-                    </div>
-
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-black text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-48 z-10">
-                      <div className="font-medium mb-1 text-sm">Sin Runa</div>
-                      <div className="text-gray-300">
-                        No aplica efectos especiales
+                      <div className="text-xs text-gray-400 mt-1">
+                        Sin efectos
                       </div>
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
+                    </div>
+                  </div>
+
+                  {/* Runa Definida */}
+                  <div
+                    onClick={() => handleRuneTypeChange("defined")}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all group relative ${
+                      currentAxie.runeType === "defined"
+                        ? "border-purple-500 bg-purple-900/20"
+                        : "border-gray-600 bg-gray-700 hover:border-gray-500"
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="w-10 h-10 bg-purple-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-sm text-white">⚡</span>
+                      </div>
+                      <div className="text-sm font-medium text-white">
+                        Runa Definida
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Runa predefinida
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Runa Personalizada */}
+                  <div
+                    onClick={() => handleRuneTypeChange("custom")}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all group relative ${
+                      currentAxie.runeType === "custom"
+                        ? "border-purple-500 bg-purple-900/20"
+                        : "border-gray-600 bg-gray-700 hover:border-gray-500"
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="w-10 h-10 bg-orange-500 rounded-full mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-sm text-white">⚙️</span>
+                      </div>
+                      <div className="text-sm font-medium text-white">
+                        Runa Personalizada
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Valores personalizados
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Runa seleccionada */}
-                {currentAxie.rune && (
-                  <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-purple-300">
-                          {currentAxie.rune.name}
-                        </p>
-                        <p className="text-xs text-purple-400 mt-1">
-                          {currentAxie.rune.effect}
-                        </p>
+                {/* Contenido según el tipo de runa seleccionada */}
+                {currentAxie.runeType === "defined" && (
+                  <div>
+                    {/* Runa seleccionada */}
+                    {currentAxie.rune && (
+                      <div className="mb-4 p-3 bg-purple-900/20 border border-purple-600 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-purple-300">
+                              {currentAxie.rune.name}
+                            </p>
+                            <p className="text-xs text-purple-400 mt-1">
+                              {currentAxie.rune.effect}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleRuneChange("", 0)}
+                            className="text-purple-400 hover:text-purple-300 text-sm"
+                          >
+                            Quitar
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleRuneChange("", 0)}
-                        className="text-purple-400 hover:text-purple-300 text-sm"
-                      >
-                        Quitar
-                      </button>
+                    )}
+
+                    {/* Grid de runas */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {Object.entries(RUNES).map(([runeKey, runeLevels]) => (
+                        <div key={runeKey} className="space-y-2">
+                          <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                            {runeKey.replace(/([A-Z])/g, " $1").trim()}
+                          </h4>
+                          <div className="grid grid-cols-1 gap-2">
+                            {runeLevels.map((rune) => (
+                              <div
+                                key={rune.id}
+                                onClick={() =>
+                                  handleRuneChange(runeKey, rune.level)
+                                }
+                                className={`p-2 rounded-lg border-2 cursor-pointer transition-all group relative ${
+                                  currentAxie.rune?.id === rune.id
+                                    ? "border-purple-500 bg-purple-900/20"
+                                    : "border-gray-600 bg-gray-700 hover:border-purple-400 hover:bg-purple-900/10"
+                                }`}
+                              >
+                                <div className="text-center">
+                                  <div className="text-xs font-medium text-white mb-1">
+                                    {rune.name.replace(/Lv\d+/, "").trim()}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Lv{rune.level}
+                                  </div>
+                                </div>
+
+                                {/* Tooltip con efecto */}
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-black text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-80 z-10">
+                                  <div className="font-medium mb-2 text-sm">
+                                    {rune.name}
+                                  </div>
+                                  <div className="text-gray-300 leading-relaxed">
+                                    {rune.effect}
+                                  </div>
+                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                {/* Grid de runas */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {Object.entries(RUNES).map(([runeKey, runeLevels]) => (
-                    <div key={runeKey} className="space-y-2">
-                      <h4 className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                        {runeKey.replace(/([A-Z])/g, " $1").trim()}
-                      </h4>
-                      <div className="grid grid-cols-1 gap-2">
-                        {runeLevels.map((rune) => (
-                          <div
-                            key={rune.id}
-                            onClick={() =>
-                              handleRuneChange(runeKey, rune.level)
-                            }
-                            className={`p-2 rounded-lg border-2 cursor-pointer transition-all group relative ${
-                              currentAxie.rune?.id === rune.id
-                                ? "border-purple-500 bg-purple-900/20"
-                                : "border-gray-600 bg-gray-700 hover:border-purple-400 hover:bg-purple-900/10"
-                            }`}
+                {currentAxie.runeType === "custom" && (
+                  <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-6 border border-gray-700 shadow-md space-y-6">
+                    {/* Porcentaje de Daño Adicional */}
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-4">
+                        <label className="text-lg font-medium text-blue-300 flex items-center min-w-[120px]">
+                          <svg
+                            className="w-5 h-5 mr-2"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
                           >
-                            <div className="text-center">
-                              <div className="text-xs font-medium text-white mb-1">
-                                {rune.name.replace(/Lv\d+/, "").trim()}
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                Lv{rune.level}
-                              </div>
-                            </div>
-
-                            {/* Tooltip con efecto */}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 bg-black text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-80 z-10">
-                              <div className="font-medium mb-2 text-sm">
-                                {rune.name}
-                              </div>
-                              <div className="text-gray-300 leading-relaxed">
-                                {rune.effect}
-                              </div>
-                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
-                            </div>
-                          </div>
-                        ))}
+                            <path
+                              fillRule="evenodd"
+                              d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Daño:
+                        </label>
+                        <button
+                          onClick={() =>
+                            handleCustomRuneChange(
+                              "damageBonus",
+                              Math.max(
+                                0,
+                                (currentAxie.customRune?.damageBonus || 0) - 5
+                              )
+                            )
+                          }
+                          className="w-10 h-10 bg-red-600 text-white rounded flex items-center justify-center text-lg font-bold hover:bg-red-700 transition-colors"
+                        >
+                          -
+                        </button>
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={currentAxie.customRune?.damageBonus || 0}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              );
+                              const numValue = parseInt(value) || 0;
+                              handleCustomRuneChange(
+                                "damageBonus",
+                                Math.min(100, Math.max(0, numValue))
+                              );
+                            }}
+                            onBlur={(e) => {
+                              const value = parseInt(e.target.value) || 0;
+                              handleCustomRuneChange(
+                                "damageBonus",
+                                Math.min(100, Math.max(0, value))
+                              );
+                            }}
+                            className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-center text-white text-lg font-medium focus:border-blue-500 focus:outline-none"
+                            placeholder="0"
+                          />
+                          <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                            %
+                          </span>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleCustomRuneChange(
+                              "damageBonus",
+                              Math.min(
+                                100,
+                                (currentAxie.customRune?.damageBonus || 0) + 5
+                              )
+                            )
+                          }
+                          className="w-10 h-10 bg-green-600 text-white rounded flex items-center justify-center text-lg font-bold hover:bg-green-700 transition-colors"
+                        >
+                          +
+                        </button>
                       </div>
+                      <p className="text-xs text-gray-300 ml-[136px]">
+                        Bonus de daño que se aplica antes del bonus de furia
+                      </p>
                     </div>
-                  ))}
-                </div>
+
+                    {/* Porcentaje de Daño en Furia */}
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-4">
+                        <label className="text-lg font-medium text-red-300 flex items-center min-w-[120px]">
+                          <svg
+                            className="w-5 h-5 mr-2"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Furia:
+                        </label>
+                        <button
+                          onClick={() =>
+                            handleCustomRuneChange(
+                              "furyDamageBonus",
+                              Math.max(
+                                0,
+                                (currentAxie.customRune?.furyDamageBonus || 0) -
+                                  5
+                              )
+                            )
+                          }
+                          className="w-10 h-10 bg-red-600 text-white rounded flex items-center justify-center text-lg font-bold hover:bg-red-700 transition-colors"
+                        >
+                          -
+                        </button>
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={currentAxie.customRune?.furyDamageBonus || 0}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9]/g,
+                                ""
+                              );
+                              const numValue = parseInt(value) || 0;
+                              handleCustomRuneChange(
+                                "furyDamageBonus",
+                                Math.min(100, Math.max(0, numValue))
+                              );
+                            }}
+                            onBlur={(e) => {
+                              const value = parseInt(e.target.value) || 0;
+                              handleCustomRuneChange(
+                                "furyDamageBonus",
+                                Math.min(100, Math.max(0, value))
+                              );
+                            }}
+                            className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-center text-white text-lg font-medium focus:border-red-500 focus:outline-none"
+                            placeholder="0"
+                          />
+                          <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                            %
+                          </span>
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleCustomRuneChange(
+                              "furyDamageBonus",
+                              Math.min(
+                                100,
+                                (currentAxie.customRune?.furyDamageBonus || 0) +
+                                  5
+                              )
+                            )
+                          }
+                          className="w-10 h-10 bg-green-600 text-white rounded flex items-center justify-center text-lg font-bold hover:bg-green-700 transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-300 ml-[136px]">
+                        Bonus adicional al porcentaje base de furia (50%)
+                      </p>
+                    </div>
+
+                    {/* Información de la runa personalizada */}
+                    {currentAxie.customRune && (
+                      <div className="p-3 bg-purple-900/20 border border-purple-600 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-purple-300">
+                              Runa Personalizada
+                            </p>
+                            <p className="text-xs text-purple-400 mt-1">
+                              {currentAxie.customRune.damageBonus
+                                ? `Daño: +${currentAxie.customRune.damageBonus}%`
+                                : ""}
+                              {currentAxie.customRune.damageBonus &&
+                              currentAxie.customRune.furyDamageBonus
+                                ? " | "
+                                : ""}
+                              {currentAxie.customRune.furyDamageBonus
+                                ? `Furia: +${currentAxie.customRune.furyDamageBonus}%`
+                                : ""}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() =>
+                              handleCustomRuneChange("damageBonus", 0)
+                            }
+                            className="text-purple-400 hover:text-purple-300 text-sm"
+                          >
+                            Quitar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

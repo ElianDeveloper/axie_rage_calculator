@@ -17,6 +17,7 @@ export function DamageCalculator() {
         back: { ...TEAM_CARDS.ronin },
         tail: { ...TEAM_CARDS.shiba },
       },
+      runeType: "none",
       furyState: { isInFury: false, rageStacks: 0, alliesInFury: 0 },
       energySpent: 0,
       pureDamageUsed: 0,
@@ -30,6 +31,7 @@ export function DamageCalculator() {
         back: { ...TEAM_CARDS.ronin },
         tail: { ...TEAM_CARDS.shiba },
       },
+      runeType: "none",
       furyState: { isInFury: false, rageStacks: 0, alliesInFury: 0 },
       energySpent: 0,
       pureDamageUsed: 0,
@@ -43,6 +45,7 @@ export function DamageCalculator() {
         back: { ...TEAM_CARDS.ronin },
         tail: { ...TEAM_CARDS.shiba },
       },
+      runeType: "none",
       furyState: { isInFury: false, rageStacks: 0, alliesInFury: 0 },
       energySpent: 0,
       pureDamageUsed: 0,
@@ -62,8 +65,27 @@ export function DamageCalculator() {
   // Cargar configuración guardada y mostrar log
   useEffect(() => {
     if (savedTeam) {
+      // Verificar que el equipo tenga la estructura correcta
+      const validatedTeam = {
+        front: {
+          ...savedTeam.front,
+          runeType: savedTeam.front.runeType || "none",
+          customRune: savedTeam.front.customRune || undefined,
+        },
+        mid: {
+          ...savedTeam.mid,
+          runeType: savedTeam.mid.runeType || "none",
+          customRune: savedTeam.mid.customRune || undefined,
+        },
+        back: {
+          ...savedTeam.back,
+          runeType: savedTeam.back.runeType || "none",
+          customRune: savedTeam.back.customRune || undefined,
+        },
+      };
+
       // Cargar la configuración en el estado local
-      setTeam(savedTeam);
+      setTeam(validatedTeam);
     }
   }, [savedTeam]);
 
@@ -116,116 +138,185 @@ export function DamageCalculator() {
     <div className="h-full bg-gray-900 text-white p-6 overflow-auto">
       <div className="max-w-7xl mx-auto">
         {/* Controles Globales */}
-        <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <div className="grid grid-cols-2 gap-8">
+        <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-4 mb-6 border border-gray-700 shadow-md">
+          <div className="flex items-center justify-between">
             {/* Reducción de Daño Global */}
-            <div className="flex items-center justify-center space-x-4">
-              <label className="text-xl font-medium">Reducción de Daño:</label>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() =>
-                    setDamageConfig((prev) => ({
-                      ...prev,
-                      damageReduction: Math.max(0, prev.damageReduction - 5),
-                    }))
-                  }
-                  className="w-10 h-10 bg-red-600 text-white rounded flex items-center justify-center text-lg font-bold hover:bg-red-700"
+            <div className="flex items-center space-x-3">
+              <label className="text-sm font-medium text-red-300 flex items-center">
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  -
-                </button>
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Reducción:
+              </label>
+              <button
+                onClick={() =>
+                  setDamageConfig((prev) => ({
+                    ...prev,
+                    damageReduction: Math.max(0, prev.damageReduction - 5),
+                  }))
+                }
+                className="w-7 h-7 bg-red-600 text-white rounded flex items-center justify-center text-sm font-bold hover:bg-red-700 transition-colors"
+              >
+                -
+              </button>
+              <div className="relative">
                 <input
-                  type="number"
-                  min="0"
-                  max="100"
+                  type="text"
                   value={damageConfig.damageReduction}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    const numValue = parseInt(value) || 0;
                     setDamageConfig((prev) => ({
                       ...prev,
-                      damageReduction: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-20 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-center text-white text-lg font-medium"
+                      damageReduction: Math.min(100, Math.max(0, numValue)),
+                    }));
+                  }}
+                  onBlur={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    setDamageConfig((prev) => ({
+                      ...prev,
+                      damageReduction: Math.min(100, Math.max(0, value)),
+                    }));
+                  }}
+                  className="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-center text-white text-sm font-medium focus:border-red-500 focus:outline-none"
+                  placeholder="0"
                 />
-                <span className="text-lg font-medium">%</span>
-                <button
-                  onClick={() =>
-                    setDamageConfig((prev) => ({
-                      ...prev,
-                      damageReduction: Math.min(100, prev.damageReduction + 5),
-                    }))
-                  }
-                  className="w-10 h-10 bg-green-600 text-white rounded flex items-center justify-center text-lg font-bold hover:bg-green-700"
-                >
-                  +
-                </button>
+                <span className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs">
+                  %
+                </span>
               </div>
+              <button
+                onClick={() =>
+                  setDamageConfig((prev) => ({
+                    ...prev,
+                    damageReduction: Math.min(100, prev.damageReduction + 5),
+                  }))
+                }
+                className="w-7 h-7 bg-green-600 text-white rounded flex items-center justify-center text-sm font-bold hover:bg-green-700 transition-colors"
+              >
+                +
+              </button>
             </div>
 
+            {/* Separador */}
+            <div className="w-px h-8 bg-gray-600"></div>
+
             {/* Energía Global para RONIN */}
-            <div className="flex items-center justify-center space-x-4">
-              <label className="text-xl font-medium">Energía:</label>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => {
+            <div className="flex items-center space-x-3">
+              <label className="text-sm font-medium text-yellow-300 flex items-center">
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Energía:
+              </label>
+              <button
+                onClick={() => {
+                  setTeam((prev) => ({
+                    ...prev,
+                    front: {
+                      ...prev.front,
+                      energySpent: Math.max(0, prev.front.energySpent - 1),
+                    },
+                    mid: {
+                      ...prev.mid,
+                      energySpent: Math.max(0, prev.mid.energySpent - 1),
+                    },
+                    back: {
+                      ...prev.back,
+                      energySpent: Math.max(0, prev.back.energySpent - 1),
+                    },
+                  }));
+                }}
+                className="w-7 h-7 bg-red-600 text-white rounded flex items-center justify-center text-sm font-bold hover:bg-red-700 transition-colors"
+              >
+                -
+              </button>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={team.front.energySpent}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, "");
+                    const numValue = parseInt(value) || 0;
                     setTeam((prev) => ({
                       ...prev,
                       front: {
                         ...prev.front,
-                        energySpent: Math.max(0, prev.front.energySpent - 1),
+                        energySpent: Math.min(10, Math.max(0, numValue)),
                       },
                       mid: {
                         ...prev.mid,
-                        energySpent: Math.max(0, prev.mid.energySpent - 1),
+                        energySpent: Math.min(10, Math.max(0, numValue)),
                       },
                       back: {
                         ...prev.back,
-                        energySpent: Math.max(0, prev.back.energySpent - 1),
+                        energySpent: Math.min(10, Math.max(0, numValue)),
                       },
                     }));
                   }}
-                  className="w-10 h-10 bg-red-600 text-white rounded flex items-center justify-center text-lg font-bold hover:bg-red-700"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={team.front.energySpent}
-                  onChange={(e) => {
+                  onBlur={(e) => {
                     const value = parseInt(e.target.value) || 0;
                     setTeam((prev) => ({
                       ...prev,
-                      front: { ...prev.front, energySpent: value },
-                      mid: { ...prev.mid, energySpent: value },
-                      back: { ...prev.back, energySpent: value },
-                    }));
-                  }}
-                  className="w-20 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-center text-white text-lg font-medium"
-                />
-                <button
-                  onClick={() => {
-                    setTeam((prev) => ({
-                      ...prev,
                       front: {
                         ...prev.front,
-                        energySpent: Math.min(10, prev.front.energySpent + 1),
+                        energySpent: Math.min(10, Math.max(0, value)),
                       },
                       mid: {
                         ...prev.mid,
-                        energySpent: Math.min(10, prev.mid.energySpent + 1),
+                        energySpent: Math.min(10, Math.max(0, value)),
                       },
                       back: {
                         ...prev.back,
-                        energySpent: Math.min(10, prev.back.energySpent + 1),
+                        energySpent: Math.min(10, Math.max(0, value)),
                       },
                     }));
                   }}
-                  className="w-10 h-10 bg-green-600 text-white rounded flex items-center justify-center text-lg font-bold hover:bg-green-700"
-                >
-                  +
-                </button>
+                  className="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-center text-white text-sm font-medium focus:border-yellow-500 focus:outline-none"
+                  placeholder="0"
+                />
+                <span className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs">
+                  ⚡
+                </span>
               </div>
+              <button
+                onClick={() => {
+                  setTeam((prev) => ({
+                    ...prev,
+                    front: {
+                      ...prev.front,
+                      energySpent: Math.min(10, prev.front.energySpent + 1),
+                    },
+                    mid: {
+                      ...prev.mid,
+                      energySpent: Math.min(10, prev.mid.energySpent + 1),
+                    },
+                    back: {
+                      ...prev.back,
+                      energySpent: Math.min(10, prev.back.energySpent + 1),
+                    },
+                  }));
+                }}
+                className="w-7 h-7 bg-green-600 text-white rounded flex items-center justify-center text-sm font-bold hover:bg-green-700 transition-colors"
+              >
+                +
+              </button>
             </div>
           </div>
         </div>
@@ -571,42 +662,24 @@ export function DamageCalculator() {
                     ¡FURIA!
                   </span>
                 )}
-                <label className="text-sm font-medium">Rage:</label>
-                <button
-                  onClick={() =>
-                    handleRageStacksChange(
-                      "front",
-                      Math.max(0, team.front.furyState.rageStacks - 1)
-                    )
-                  }
-                  className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center text-xs font-bold hover:bg-red-700"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={team.front.furyState.rageStacks}
-                  onChange={(e) =>
-                    handleRageStacksChange(
-                      "front",
-                      parseInt(e.target.value) || 0
-                    )
-                  }
-                  className="w-12 bg-gray-700 border border-gray-600 rounded px-1 py-1 text-center text-white text-sm"
-                />
-                <button
-                  onClick={() =>
-                    handleRageStacksChange(
-                      "front",
-                      Math.min(10, team.front.furyState.rageStacks + 1)
-                    )
-                  }
-                  className="w-6 h-6 bg-green-600 text-white rounded flex items-center justify-center text-xs font-bold hover:bg-green-700"
-                >
-                  +
-                </button>
+                <label className="text-sm font-medium text-gray-300">
+                  Rage:
+                </label>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: 11 }, (_, i) => i).map((rageValue) => (
+                    <button
+                      key={rageValue}
+                      onClick={() => handleRageStacksChange("front", rageValue)}
+                      className={`w-6 h-6 text-white rounded cursor-pointer flex items-center justify-center text-xs font-bold transition-colors ${
+                        team.front.furyState.rageStacks === rageValue
+                          ? "bg-red-600"
+                          : "bg-gray-600 hover:bg-gray-500"
+                      }`}
+                    >
+                      {rageValue}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -650,39 +723,24 @@ export function DamageCalculator() {
                     ¡FURIA!
                   </span>
                 )}
-                <label className="text-sm font-medium">Rage:</label>
-                <button
-                  onClick={() =>
-                    handleRageStacksChange(
-                      "mid",
-                      Math.max(0, team.mid.furyState.rageStacks - 1)
-                    )
-                  }
-                  className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center text-xs font-bold hover:bg-red-700"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={team.mid.furyState.rageStacks}
-                  onChange={(e) =>
-                    handleRageStacksChange("mid", parseInt(e.target.value) || 0)
-                  }
-                  className="w-12 bg-gray-700 border border-gray-600 rounded px-1 py-1 text-center text-white text-sm"
-                />
-                <button
-                  onClick={() =>
-                    handleRageStacksChange(
-                      "mid",
-                      Math.min(10, team.mid.furyState.rageStacks + 1)
-                    )
-                  }
-                  className="w-6 h-6 bg-green-600 text-white rounded flex items-center justify-center text-xs font-bold hover:bg-green-700"
-                >
-                  +
-                </button>
+                <label className="text-sm font-medium text-gray-300">
+                  Rage:
+                </label>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: 11 }, (_, i) => i).map((rageValue) => (
+                    <button
+                      key={rageValue}
+                      onClick={() => handleRageStacksChange("mid", rageValue)}
+                      className={`w-6 h-6 text-white rounded cursor-pointer flex items-center justify-center text-xs font-bold transition-colors ${
+                        team.mid.furyState.rageStacks === rageValue
+                          ? "bg-red-600"
+                          : "bg-gray-600 hover:bg-gray-500"
+                      }`}
+                    >
+                      {rageValue}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -726,42 +784,24 @@ export function DamageCalculator() {
                     ¡FURIA!
                   </span>
                 )}
-                <label className="text-sm font-medium">Rage:</label>
-                <button
-                  onClick={() =>
-                    handleRageStacksChange(
-                      "back",
-                      Math.max(0, team.back.furyState.rageStacks - 1)
-                    )
-                  }
-                  className="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center text-xs font-bold hover:bg-red-700"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={team.back.furyState.rageStacks}
-                  onChange={(e) =>
-                    handleRageStacksChange(
-                      "back",
-                      parseInt(e.target.value) || 0
-                    )
-                  }
-                  className="w-12 bg-gray-700 border border-gray-600 rounded px-1 py-1 text-center text-white text-sm"
-                />
-                <button
-                  onClick={() =>
-                    handleRageStacksChange(
-                      "back",
-                      Math.min(10, team.back.furyState.rageStacks + 1)
-                    )
-                  }
-                  className="w-6 h-6 bg-green-600 text-white rounded flex items-center justify-center text-xs font-bold hover:bg-green-700"
-                >
-                  +
-                </button>
+                <label className="text-sm font-medium text-gray-300">
+                  Rage:
+                </label>
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: 11 }, (_, i) => i).map((rageValue) => (
+                    <button
+                      key={rageValue}
+                      onClick={() => handleRageStacksChange("back", rageValue)}
+                      className={`w-6 h-6 text-white rounded cursor-pointer flex items-center justify-center text-xs font-bold transition-colors ${
+                        team.back.furyState.rageStacks === rageValue
+                          ? "bg-red-600"
+                          : "bg-gray-600 hover:bg-gray-500"
+                      }`}
+                    >
+                      {rageValue}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
